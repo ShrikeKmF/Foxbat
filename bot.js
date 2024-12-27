@@ -6,7 +6,6 @@
 // Discord: https://discord.gg/raidertacticalgroup
 /////////////////////////////////////////////////////////////////
 
-
 // Role IDs as variables
 const UNIT_COMMANDER = '1033575125821440010'; // Unit Commander
 const MERC_COUNCIL = '669012442679869459'; // Merc Council
