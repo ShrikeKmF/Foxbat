@@ -11,11 +11,10 @@ const FENRIR = '1310054368527253595'; // Fenrir
 const SABRE = '1138339180854902795'; // Sabre
 const FIREBRAND = '1138339212446400573'; // Firebrand
 const FREELANCER = '669012337877057581'; // Freelancer
+const MERCANARY = '669012403211599912'; // Freelancer
 const CONTRACTOR = '987956876895457332'; // Contractor
 const PROBATION = '1052884968516362311'; // Probation
 const GUEST = '669029865399517206'; // Guest
-
-
 
 const { Client, GatewayIntentBits, REST, Routes } = require('discord.js');
 require('dotenv').config();
@@ -25,7 +24,6 @@ const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBit
 // Retrieve the bot token and client ID from the .env file
 const TOKEN = process.env.DISCORD_TOKEN;
 const CLIENT_ID = process.env.CLIENT_ID;
-
 const GUILD_ID = process.env.GUILD_ID; // Your server's ID (make sure this is in your .env file)
 
 // Define the roles that are allowed to run certain commands
@@ -180,6 +178,12 @@ async function hasPermission(member) {
     return allowedRoles.some(role => member.roles.cache.has(role));
 }
 
+// Log command usage and conditions
+async function logCommandUsage(commandName, user, conditions) {
+    const logChannel = await client.channels.fetch('1322143539563466854'); // Channel ID to log to
+    await logChannel.send(`Command: /${commandName} used by ${user.tag} with conditions: ${conditions}`);
+}
+
 // Event: Interaction Create
 client.on('interactionCreate', async interaction => {
     if (!interaction.isCommand()) return;
@@ -200,6 +204,7 @@ client.on('interactionCreate', async interaction => {
     // Handle each command
     if (commandName === 'test') {
         await interaction.reply('testing 123');
+        logCommandUsage(commandName, interaction.user, 'No specific conditions');
     }
 
     // Recruit command
@@ -212,6 +217,7 @@ client.on('interactionCreate', async interaction => {
             FREELANCER,
         ]);
         await interaction.reply(`${user.tag} has been recruited.`);
+        logCommandUsage(commandName, interaction.user, `Recruiting user ${user.tag}`);
     }
 
     // Remove command
@@ -220,12 +226,14 @@ client.on('interactionCreate', async interaction => {
         const member = await interaction.guild.members.fetch(user.id);
         await member.roles.set([GUEST]); // Remove all roles and add this one
         await interaction.reply(`${user.tag} has been removed.`);
+        logCommandUsage(commandName, interaction.user, `Removing user ${user.tag}`);
     }
 
     // Probation op command
     if (commandName === 'probation-op') {
         const user = options.getUser('user');
         await interaction.reply(`${user.tag} has completed an op of their probation.`);
+        logCommandUsage(commandName, interaction.user, `Announcing probation completion for ${user.tag}`);
     }
 
     // Probation end command
@@ -234,6 +242,7 @@ client.on('interactionCreate', async interaction => {
         const member = await interaction.guild.members.fetch(user.id);
         await member.roles.remove(PROBATION); // Remove probation role
         await interaction.reply(`${user.tag} has completed their probation.`);
+        logCommandUsage(commandName, interaction.user, `Ending probation for ${user.tag}`);
     }
 
     // Section switch command
@@ -255,17 +264,17 @@ client.on('interactionCreate', async interaction => {
 
         // Remove all section roles and general role
         await member.roles.remove(sectionRolesToRemove);
-        await member.roles.remove(FREELANCER); // Remove the general role
+        await member.roles.remove(MERCANARY);
 
         // Add the new section role
         await member.roles.add(sectionRole);
         if (sectionRole != FREELANCER)
         {
-            await member.roles.add(FREELANCER); // Add the general role
+            await member.roles.add(MERCANARY);
         }
         
-
         await interaction.reply(`${user.tag} has switched to section ${sectionRole.name}.`);
+        logCommandUsage(commandName, interaction.user, `Switching ${user.tag} to section ${sectionRole.name}`);
     }
 
     // Role Switch command
@@ -293,6 +302,7 @@ client.on('interactionCreate', async interaction => {
         }
 
         await interaction.reply(`${user.tag} has switched to role ${roleName}.`);
+        logCommandUsage(commandName, interaction.user, `Switching ${user.tag} to role ${roleName}`);
     }
 
     // Stats command
@@ -304,6 +314,7 @@ client.on('interactionCreate', async interaction => {
         const seconds = Math.floor(uptime % 60);
 
         await interaction.reply(`Bot Uptime: ${days}d ${hours}h ${minutes}m ${seconds}s`);
+        logCommandUsage(commandName, interaction.user, `Bot uptime requested`);
     }
 });
 
