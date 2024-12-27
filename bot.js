@@ -255,11 +255,12 @@ client.on('interactionCreate', async interaction => {
 
         // Remove old section roles
         const sectionRolesToRemove = [
-            HITMAN, // Hitman
-            ARES, // Ares
-            FENRIR, // Fenrir
-            SABRE, // Sabre
-            FIREBRAND, // Firebrand
+            HITMAN,
+            ARES,
+            FENRIR,
+            SABRE, 
+            FIREBRAND,
+            FREELANCER
         ];
 
         // Remove all section roles and general role
