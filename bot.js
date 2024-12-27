@@ -1,3 +1,22 @@
+// Role IDs as variables
+const UNIT_COMMANDER = '1033575125821440010'; // Unit Commander
+const MERC_COUNCIL = '669012442679869459'; // Merc Council
+const HR_LEAD = '952904175207981066'; // HR Lead
+const HR = '1258905966842220676'; // HR
+const RD = '952904217557876887'; // R&D
+const TEAM_LEAD = '1138339232482611270'; // Team Lead
+const HITMAN = '1138339155110269050'; // Hitman
+const ARES = '1169170782539235399'; // Ares
+const FENRIR = '1310054368527253595'; // Fenrir
+const SABRE = '1138339180854902795'; // Sabre
+const FIREBRAND = '1138339212446400573'; // Firebrand
+const FREELANCER = '669012337877057581'; // Freelancer
+const CONTRACTOR = '987956876895457332'; // Contractor
+const PROBATION = '1052884968516362311'; // Probation
+const GUEST = '669029865399517206'; // Guest
+
+
+
 const { Client, GatewayIntentBits, REST, Routes } = require('discord.js');
 require('dotenv').config();
 
@@ -11,12 +30,12 @@ const GUILD_ID = process.env.GUILD_ID; // Your server's ID (make sure this is in
 
 // Define the roles that are allowed to run certain commands
 const allowedRoles = [
-    '1033575125821440010', // Role 1
-    '669012442679869459', // Role 2
-    '952904175207981066', // Role 3
-    '1258905966842220676', // Role 4
-    '952904217557876887', // Role 5
-    '1138339232482611270' // Role 6
+    UNIT_COMMANDER,
+    MERC_COUNCIL,
+    HR_LEAD,
+    HR,
+    RD,
+    TEAM_LEAD
 ];
 
 // Define the slash commands
@@ -89,11 +108,12 @@ const commands = [
                 description: 'Section to assign user',
                 required: true,
                 choices: [
-                    { name: 'Hitman', value: '1138339155110269050' },
-                    { name: 'Ares', value: '1169170782539235399' },
-                    { name: 'Fenrir', value: '1310054368527253595' },
-                    { name: 'Sabre', value: '1138339180854902795' },
-                    { name: 'Firebrand', value: '1138339212446400573' },
+                    { name: 'Hitman', value: HITMAN },
+                    { name: 'Ares', value: ARES },
+                    { name: 'Fenrir', value: FENRIR },
+                    { name: 'Sabre', value: SABRE },
+                    { name: 'Firebrand', value: FIREBRAND },
+                    { name: 'Freelancer', value: FREELANCER },
                 ],
             },
         ],
@@ -187,9 +207,9 @@ client.on('interactionCreate', async interaction => {
         const user = options.getUser('user');
         const member = await interaction.guild.members.fetch(user.id);
         await member.roles.set([
-            '987956876895457332', // Add the roles here as per your requirement
-            '1052884968516362311',
-            '669012337877057581',
+            CONTRACTOR, // Add the roles here as per your requirement
+            PROBATION,
+            FREELANCER,
         ]);
         await interaction.reply(`${user.tag} has been recruited.`);
     }
@@ -198,7 +218,7 @@ client.on('interactionCreate', async interaction => {
     if (commandName === 'remove') {
         const user = options.getUser('user');
         const member = await interaction.guild.members.fetch(user.id);
-        await member.roles.set(['669029865399517206']); // Remove all roles and add this one
+        await member.roles.set([GUEST]); // Remove all roles and add this one
         await interaction.reply(`${user.tag} has been removed.`);
     }
 
@@ -212,7 +232,7 @@ client.on('interactionCreate', async interaction => {
     if (commandName === 'probation-end') {
         const user = options.getUser('user');
         const member = await interaction.guild.members.fetch(user.id);
-        await member.roles.remove('1052884968516362311'); // Remove probation role
+        await member.roles.remove(PROBATION); // Remove probation role
         await interaction.reply(`${user.tag} has completed their probation.`);
     }
 
@@ -226,23 +246,24 @@ client.on('interactionCreate', async interaction => {
 
         // Remove old section roles
         const sectionRolesToRemove = [
-            '1138339155110269050', // Hitman
-            '1169170782539235399', // Ares
-            '1310054368527253595', // Fenrir
-            '1138339180854902795', // Sabre
-            '1138339212446400573', // Firebrand
+            HITMAN, // Hitman
+            ARES, // Ares
+            FENRIR, // Fenrir
+            SABRE, // Sabre
+            FIREBRAND, // Firebrand
         ];
 
         // Remove all section roles and general role
         await member.roles.remove(sectionRolesToRemove);
-        await member.roles.remove('669012337877057581'); // Remove the general role
+        await member.roles.remove(FREELANCER); // Remove the general role
 
         // Add the new section role
         await member.roles.add(sectionRole);
-        if (sectionRole != 1138339212446400573)
+        if (sectionRole != FREELANCER)
         {
-            await member.roles.add('669012337877057581'); // Add the general role
+            await member.roles.add(FREELANCER); // Add the general role
         }
+        
 
         await interaction.reply(`${user.tag} has switched to section ${sectionRole.name}.`);
     }
@@ -253,22 +274,22 @@ client.on('interactionCreate', async interaction => {
         const roleName = options.getString('role');
         const member = await interaction.guild.members.fetch(user.id);
         const roles = {
-            'Team Lead': '1138339232482611270',
-            '2ic': '1138339232482611270',
-            'JTAC': '1138339232482611270',
+            'Team Lead': TEAM_LEAD,
+            '2ic': TEAM_LEAD,
+            'JTAC': TEAM_LEAD,
         };
         const noRole = ['Pilot', 'Crew Chief', 'Member'];
 
         // Remove the Team Lead role if any
-        if (member.roles.cache.has('1138339232482611270')) {
-            await member.roles.remove('1138339232482611270');
+        if (member.roles.cache.has(TEAM_LEAD)) {
+            await member.roles.remove(TEAM_LEAD);
         }
 
         // Add the new role if applicable
         if (roles[roleName]) {
             await member.roles.add(roles[roleName]);
         } else {
-            await member.roles.remove('1138339232482611270'); // Remove the Team Lead role if no role
+            await member.roles.remove(TEAM_LEAD); // Remove the Team Lead role if no role
         }
 
         await interaction.reply(`${user.tag} has switched to role ${roleName}.`);
