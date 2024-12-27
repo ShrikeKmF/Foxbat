@@ -24,16 +24,32 @@ const CONTRACTOR = '987956876895457332'; // Contractor
 const PROBATION = '1052884968516362311'; // Probation
 const GUEST = '669029865399517206'; // Guest
 
+// Add required libraries
+const { google } = require('googleapis');
 const { Client, GatewayIntentBits, REST, Routes } = require('discord.js');
+const fs = require('fs');
+const path = require('path');
 require('dotenv').config();
 
-const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers] });
+// Load Google Sheets credentials from JSON file
+const credentialsPath = path.join(__dirname, 'credentials.json');
+const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
+const GOOGLE_APIKEY =  process.env.GOOGLE_APIKEY;
 
-// Retrieve the bot token and client ID from the .env file
+// Discord Setup
+const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers] });
 const TOKEN = process.env.DISCORD_TOKEN;
 const CLIENT_ID = process.env.CLIENT_ID;
 const GUILD_ID = process.env.GUILD_ID;
 const VERSION_ID = '1.0';
+
+// Google Sheets setup
+const auth = new google.auth.GoogleAuth({
+    keyFile: credentialsPath, 
+    scopes: SCOPES,
+});
+const MEMBER_ROSTER_ID = '1713576908';
+const RTG_ORBAT_ID = '1AgXmqVKcYC2hk-P6pVmiChx7Ub3IhihnhgEv6W2DrQ8';
 
 // Channels
 const VOICE_CHANNEL_ID = '1322153808742318172';
@@ -166,7 +182,7 @@ const commands = [
                 ],
             },
         ],
-    },
+    }
 ];
 
 // Register slash commands with Discord
@@ -176,18 +192,52 @@ const rest = new REST({ version: '10' }).setToken(TOKEN);
     try {
         console.log('Started Reloading Application (/) commands.');
 
+        // Log before the first API call
+        console.log('Calling first rest.put() to clear existing commands...');
         await rest.put(Routes.applicationCommands(CLIENT_ID), { body: [] });
+
+        // Log before the second API call
+        console.log('Calling second rest.put() to update commands...');
         await rest.put(Routes.applicationCommands(CLIENT_ID), { body: commands });
 
         console.log('Successfully Reloaded Application (/) commands.');
     } catch (error) {
-        console.error(error);
+        console.error('An error occurred:', error);
     }
 })();
 
+
+async function testGoogleSheetsConnection() {
+    try {
+        const sheets = google.sheets({ version: 'v4', auth: GOOGLE_APIKEY });
+
+        // Attempt to fetch data from a sheet
+        const response = await sheets.spreadsheets.values.get({
+            spreadsheetId: '1AgXmqVKcYC2hk-P6pVmiChx7Ub3IhihnhgEv6W2DrQ8',  // Your Spreadsheet ID
+            range: 'Member Roster!A1',  // Specify a range to check
+        });
+
+        if (response.data.values && response.data.values.length) {
+            console.log('Successfully connected to the Google Sheets API.');
+            console.log('Data:', response.data.values);
+            return;
+        } else {
+            console.log('No data found.');
+            return;
+        }
+    } catch (error) {
+        console.error('Error connecting to the Google Sheets API:', error);
+    }
+}
+
 // Event: Bot is ready
 client.once('ready', () => {
-    console.log(`Foxbot is online! Logged in as ${client.user.tag}`);
+    try {
+        testGoogleSheetsConnection();
+        console.log(`Foxbot is online! Logged in as ${client.user.tag}`);
+    } catch (error) {
+        console.error('Error Starting Foxbat', error);
+}
 });
 
 // Check if user has any of the allowed roles
@@ -225,6 +275,58 @@ async function updateVoiceChannel() {
 // Update every 5 minutes
 setInterval(updateVoiceChannel, 5 * 60 * 1000); // 5 minutes in milliseconds
 
+// Ensure you've authorized and set up the Sheets API client
+async function updateCellInRow(spreadsheetId, sheetName, searchValue, columnToUpdate, newValue) {
+    try {
+        // Get the data from Column A
+        const range = `${sheetName}!A:A`; // Entire column A
+        const request = {
+            spreadsheetId: spreadsheetId,
+            range: range,
+        };
+
+        // Get values from the sheet
+        const response = await sheets.spreadsheets.values.get(request);
+        const rows = response.data.values;
+
+        if (rows.length) {
+            // Iterate through the rows to find the matching name
+            let rowIndex = -1;
+            for (let i = 0; i < rows.length; i++) {
+                if (rows[i][0] === searchValue) {
+                    rowIndex = i + 1; // Google Sheets API is 1-indexed
+                    break;
+                }
+            }
+
+            if (rowIndex === -1) {
+                console.log('Name not found.');
+                return;
+            }
+
+            // Now that we have the rowIndex, update the corresponding cell in the desired column
+            const updateRange = `${sheetName}!${columnToUpdate}${rowIndex}`; // Column and row of the cell to update
+            const values = [[newValue]];
+
+            // Update the cell
+            const updateRequest = {
+                spreadsheetId: spreadsheetId,
+                range: updateRange,
+                valueInputOption: 'RAW',
+                resource: {
+                    values: values,
+                },
+            };
+
+            const updateResponse = await sheets.spreadsheets.values.update(updateRequest);
+            console.log(`Cell updated successfully at row ${rowIndex}.`);
+        } else {
+            console.log('No data found in the sheet.');
+        }
+    } catch (error) {
+        console.error('Error updating cell:', error);
+    }
+}
 
 // Event: Interaction Create
 client.on('interactionCreate', async interaction => {
@@ -245,6 +347,7 @@ client.on('interactionCreate', async interaction => {
 
     // Handle the refresh command
     if (commandName === 'refresh') {
+        await updateCellInRow(RTG_ORBAT_ID, MEMBER_ROSTER_ID, 'Shrike', 'A', 'Shrike1');
         await updateVoiceChannel();
         await interaction.reply('Voice channel name refreshed.');
         logCommandUsage(commandName, interaction.user.username, 'Manual refresh of voice channel name');
