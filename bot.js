@@ -24,7 +24,12 @@ const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBit
 // Retrieve the bot token and client ID from the .env file
 const TOKEN = process.env.DISCORD_TOKEN;
 const CLIENT_ID = process.env.CLIENT_ID;
-const GUILD_ID = process.env.GUILD_ID; // Your server's ID (make sure this is in your .env file)
+const GUILD_ID = process.env.GUILD_ID;
+const VERSION_ID = '1.0';
+
+// Channels
+const VOICE_CHANNEL_ID = '1322153808742318172';
+const LOG_CHANNEL_ID = '1322143539563466854';
 
 // Define the roles that are allowed to run certain commands
 const allowedRoles = [
@@ -126,7 +131,7 @@ const commands = [
     },
     {
         name: 'stats',
-        description: 'Show the bot’s uptime',
+        description: 'Show the bot’s stats',
     },
     {
         name: 'role-switch',
@@ -184,12 +189,10 @@ async function hasPermission(member) {
 
 // Log command usage and conditions
 async function logCommandUsage(commandName, user, conditions) {
-    const logChannel = await client.channels.fetch('1322143539563466854'); // Channel ID to log to
+    const logChannel = await client.channels.fetch(LOG_CHANNEL_ID); 
+    console.log(`Command: /${commandName} used by ${user.tag} with conditions: ${conditions}`);
     await logChannel.send(`Command: /${commandName} used by ${user.tag} with conditions: ${conditions}`);
 }
-
-// Voice channel ID
-const VOICE_CHANNEL_ID = '1322153808742318172';
 
 // Function to update the voice channel name with the number of "Contractor" members
 async function updateVoiceChannel() {
@@ -205,7 +208,7 @@ async function updateVoiceChannel() {
 
         // Update the voice channel name
         await voiceChannel.setName(`Contractors: ${contractorCount}`);
-        console.log(`Voice channel name updated to "Contractors: ${contractorCount}"`);
+        //console.log(`Voice channel name updated to "Contractors: ${contractorCount}"`);
     } catch (error) {
         console.error('Error updating voice channel name:', error);
     }
@@ -222,7 +225,7 @@ client.on('interactionCreate', async interaction => {
     const { commandName, options } = interaction;
 
     // Get the member object for the user who invoked the command
-    const member = await interaction.guild.members.fetch(interaction.user.id);
+    const member = await interaction.guild.members.fetch(interaction.user.username.id);
 
     // Check if the user has the required roles for the command
     if (!await hasPermission(member)) {
@@ -236,14 +239,14 @@ client.on('interactionCreate', async interaction => {
     if (commandName === 'refresh') {
         await updateVoiceChannel();
         await interaction.reply('Voice channel name refreshed.');
-        logCommandUsage(commandName, interaction.user, 'Manual refresh of voice channel name');
+        logCommandUsage(commandName, interaction.user.username, 'Manual refresh of voice channel name');
     }
 
     // Handle each command
     if (commandName === 'test') {
         await interaction.reply('testing 123');
-        console.log(commandName, interaction.user, 'No specific conditions');
-        logCommandUsage(commandName, interaction.user, 'No specific conditions');
+        console.log(commandName, interaction.user.username, 'No specific conditions');
+        logCommandUsage(commandName, interaction.user.username, 'No specific conditions');
     }
 
     // Recruit command
@@ -256,8 +259,8 @@ client.on('interactionCreate', async interaction => {
             FREELANCER,
         ]);
         await interaction.reply(`${user.tag} has been recruited.`);
-        console.log(commandName, interaction.user, `Recruiting user ${user.tag}`);
-        logCommandUsage(commandName, interaction.user, `Recruiting user ${user.tag}`);
+        console.log(commandName, interaction.user.username, `Recruiting user ${user.tag}`);
+        logCommandUsage(commandName, interaction.user.username, `Recruiting user ${user.tag}`);
     }
 
     // Remove command
@@ -266,16 +269,16 @@ client.on('interactionCreate', async interaction => {
         const member = await interaction.guild.members.fetch(user.id);
         await member.roles.set([GUEST]); // Remove all roles and add this one
         await interaction.reply(`${user.tag} has been removed.`);
-        console.log(commandName, interaction.user, `Removing user ${user.tag}`);
-        logCommandUsage(commandName, interaction.user, `Removing user ${user.tag}`);
+        console.log(commandName, interaction.user.username, `Removing user ${user.tag}`);
+        logCommandUsage(commandName, interaction.user.username, `Removing user ${user.tag}`);
     }
 
     // Probation op command
     if (commandName === 'probation-op') {
         const user = options.getUser('user');
         await interaction.reply(`${user.tag} has completed an op of their probation.`);
-        console.log(commandName, interaction.user, `Announcing probation completion for ${user.tag}`);
-        logCommandUsage(commandName, interaction.user, `Announcing probation completion for ${user.tag}`);
+        console.log(commandName, interaction.user.username, `Announcing probation completion for ${user.tag}`);
+        logCommandUsage(commandName, interaction.user.username, `Announcing probation completion for ${user.tag}`);
     }
 
     // Probation end command
@@ -284,8 +287,8 @@ client.on('interactionCreate', async interaction => {
         const member = await interaction.guild.members.fetch(user.id);
         await member.roles.remove(PROBATION); // Remove probation role
         await interaction.reply(`${user.tag} has completed their probation.`);
-        console.log(commandName, interaction.user, `Ending probation for ${user.tag}`);
-        logCommandUsage(commandName, interaction.user, `Ending probation for ${user.tag}`);
+        console.log(commandName, interaction.user.username, `Ending probation for ${user.tag}`);
+        logCommandUsage(commandName, interaction.user.username, `Ending probation for ${user.tag}`);
     }
 
     // Section switch command
@@ -318,8 +321,8 @@ client.on('interactionCreate', async interaction => {
         }
         
         await interaction.reply(`${user.tag} has switched to section ${sectionRole.name}.`);
-        console.log(commandName, interaction.user, `Switching ${user.tag} to section ${sectionRole.name}`);
-        logCommandUsage(commandName, interaction.user, `Switching ${user.tag} to section ${sectionRole.name}`);
+        console.log(commandName, interaction.user.username, `Switching ${user.tag} to section ${sectionRole.name}`);
+        logCommandUsage(commandName, interaction.user.username, `Switching ${user.tag} to section ${sectionRole.name}`);
     }
 
     // Role Switch command
@@ -347,8 +350,8 @@ client.on('interactionCreate', async interaction => {
         }
 
         await interaction.reply(`${user.tag} has switched to role ${roleName}.`);
-        console.log(commandName, interaction.user, `Switching ${user.tag} to role ${roleName}`);
-        logCommandUsage(commandName, interaction.user, `Switching ${user.tag} to role ${roleName}`);
+        console.log(commandName, interaction.user.username, `Switching ${user.tag} to role ${roleName}`);
+        logCommandUsage(commandName, interaction.user.username, `Switching ${user.tag} to role ${roleName}`);
     }
 
     // Stats command
@@ -359,9 +362,10 @@ client.on('interactionCreate', async interaction => {
         const minutes = Math.floor((uptime % (60 * 60)) / 60);
         const seconds = Math.floor(uptime % 60);
 
-        await interaction.reply(`Bot Uptime: ${days}d ${hours}h ${minutes}m ${seconds}s`);
-        console.log(commandName, interaction.user, `Bot uptime requested`);
-        logCommandUsage(commandName, interaction.user, `Bot uptime requested`);
+        await interaction.reply(`Version ${VERSION_ID},
+        Bot Uptime: ${days}d ${hours}h ${minutes}m ${seconds}s`);
+        console.log(commandName, interaction.user.username, `Bot uptime requested`);
+        logCommandUsage(commandName, interaction.user.username, `Bot uptime requested`);
     }
 });
 
