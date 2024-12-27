@@ -39,6 +39,10 @@ const allowedRoles = [
 // Define the slash commands
 const commands = [
     {
+        name: 'refresh',
+        description: 'Manually refresh the contractors count in the voice channel',
+    },
+    {
         name: 'test',
         description: 'Responds with "testing 123"',
     },
@@ -157,12 +161,12 @@ const rest = new REST({ version: '10' }).setToken(TOKEN);
 
 (async () => {
     try {
-        console.log('Started refreshing application (/) commands.');
+        console.log('Started Reloading Application (/) commands.');
 
         await rest.put(Routes.applicationCommands(CLIENT_ID), { body: [] });
         await rest.put(Routes.applicationCommands(CLIENT_ID), { body: commands });
 
-        console.log('Successfully reloaded application (/) commands.');
+        console.log('Successfully Reloaded Application (/) commands.');
     } catch (error) {
         console.error(error);
     }
@@ -184,6 +188,33 @@ async function logCommandUsage(commandName, user, conditions) {
     await logChannel.send(`Command: /${commandName} used by ${user.tag} with conditions: ${conditions}`);
 }
 
+// Voice channel ID
+const VOICE_CHANNEL_ID = '1322153808742318172';
+
+// Function to update the voice channel name with the number of "Contractor" members
+async function updateVoiceChannel() {
+    try {
+        const guild = await client.guilds.fetch(GUILD_ID);
+        const voiceChannel = await guild.channels.fetch(VOICE_CHANNEL_ID);
+
+        // Get all members in the guild
+        const members = await guild.members.fetch();
+
+        // Count the number of members with the "Contractor" role
+        const contractorCount = members.filter(member => member.roles.cache.has(CONTRACTOR)).size;
+
+        // Update the voice channel name
+        await voiceChannel.setName(`Contractors: ${contractorCount}`);
+        console.log(`Voice channel name updated to "Contractors: ${contractorCount}"`);
+    } catch (error) {
+        console.error('Error updating voice channel name:', error);
+    }
+}
+
+// Update every 5 minutes
+setInterval(updateVoiceChannel, 5 * 60 * 1000); // 5 minutes in milliseconds
+
+
 // Event: Interaction Create
 client.on('interactionCreate', async interaction => {
     if (!interaction.isCommand()) return;
@@ -201,9 +232,17 @@ client.on('interactionCreate', async interaction => {
         });
     }
 
+    // Handle the refresh command
+    if (commandName === 'refresh') {
+        await updateVoiceChannel();
+        await interaction.reply('Voice channel name refreshed.');
+        logCommandUsage(commandName, interaction.user, 'Manual refresh of voice channel name');
+    }
+
     // Handle each command
     if (commandName === 'test') {
         await interaction.reply('testing 123');
+        console.log(commandName, interaction.user, 'No specific conditions');
         logCommandUsage(commandName, interaction.user, 'No specific conditions');
     }
 
@@ -217,6 +256,7 @@ client.on('interactionCreate', async interaction => {
             FREELANCER,
         ]);
         await interaction.reply(`${user.tag} has been recruited.`);
+        console.log(commandName, interaction.user, `Recruiting user ${user.tag}`);
         logCommandUsage(commandName, interaction.user, `Recruiting user ${user.tag}`);
     }
 
@@ -226,6 +266,7 @@ client.on('interactionCreate', async interaction => {
         const member = await interaction.guild.members.fetch(user.id);
         await member.roles.set([GUEST]); // Remove all roles and add this one
         await interaction.reply(`${user.tag} has been removed.`);
+        console.log(commandName, interaction.user, `Removing user ${user.tag}`);
         logCommandUsage(commandName, interaction.user, `Removing user ${user.tag}`);
     }
 
@@ -233,6 +274,7 @@ client.on('interactionCreate', async interaction => {
     if (commandName === 'probation-op') {
         const user = options.getUser('user');
         await interaction.reply(`${user.tag} has completed an op of their probation.`);
+        console.log(commandName, interaction.user, `Announcing probation completion for ${user.tag}`);
         logCommandUsage(commandName, interaction.user, `Announcing probation completion for ${user.tag}`);
     }
 
@@ -242,6 +284,7 @@ client.on('interactionCreate', async interaction => {
         const member = await interaction.guild.members.fetch(user.id);
         await member.roles.remove(PROBATION); // Remove probation role
         await interaction.reply(`${user.tag} has completed their probation.`);
+        console.log(commandName, interaction.user, `Ending probation for ${user.tag}`);
         logCommandUsage(commandName, interaction.user, `Ending probation for ${user.tag}`);
     }
 
@@ -275,6 +318,7 @@ client.on('interactionCreate', async interaction => {
         }
         
         await interaction.reply(`${user.tag} has switched to section ${sectionRole.name}.`);
+        console.log(commandName, interaction.user, `Switching ${user.tag} to section ${sectionRole.name}`);
         logCommandUsage(commandName, interaction.user, `Switching ${user.tag} to section ${sectionRole.name}`);
     }
 
@@ -303,6 +347,7 @@ client.on('interactionCreate', async interaction => {
         }
 
         await interaction.reply(`${user.tag} has switched to role ${roleName}.`);
+        console.log(commandName, interaction.user, `Switching ${user.tag} to role ${roleName}`);
         logCommandUsage(commandName, interaction.user, `Switching ${user.tag} to role ${roleName}`);
     }
 
@@ -315,6 +360,7 @@ client.on('interactionCreate', async interaction => {
         const seconds = Math.floor(uptime % 60);
 
         await interaction.reply(`Bot Uptime: ${days}d ${hours}h ${minutes}m ${seconds}s`);
+        console.log(commandName, interaction.user, `Bot uptime requested`);
         logCommandUsage(commandName, interaction.user, `Bot uptime requested`);
     }
 });
