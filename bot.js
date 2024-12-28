@@ -278,6 +278,7 @@ client.on('interactionCreate', async interaction => {
 
     // Get the member object for the user who invoked the command
     const member = await interaction.guild.members.fetch(interaction.user.id);
+    
 
     // Check if the user has the required roles for the command
     if (!await hasPermission(member)) {
@@ -292,10 +293,9 @@ client.on('interactionCreate', async interaction => {
         try {
             await updateVoiceChannel();
             await interaction.reply('Voice channel name refreshed.');
-            logCommandUsage(commandName, interaction.user.username, 'Manual refresh of voice channel name');
+            logCommandUsage(commandName, user.tag, 'Manual refresh of voice channel name');
         } catch (error) {
             console.error('Command Refresh Failed:', error);
-            await interaction.reply('An error occurred while refreshing the voice channel.');
         }
     }
 
@@ -303,19 +303,18 @@ client.on('interactionCreate', async interaction => {
     if (commandName === 'test') {
         try {
             await interaction.reply('testing 123');
-            console.log(commandName, interaction.user.username, 'No specific conditions');
-            logCommandUsage(commandName, interaction.user.username, 'No specific conditions');
+            console.log(commandName, user.tag, 'No specific conditions');
+            logCommandUsage(commandName, user, 'No specific conditions');
         } catch (error) {
             console.error('Command Test Failed:', error);
-            await interaction.reply('An error occurred while processing the test command.');
         }
     }
 
     // Recruit command
     if (commandName === 'recruit') {
         try {
-            const member = await interaction.guild.members.fetch(interaction.user.id);
             const user = options.getUser('user');
+            const targetMember = await interaction.guild.members.fetch(user.id);
             await interaction.reply(`${user.tag} has been recruited.`);
     
             // Updating Orbat
@@ -326,92 +325,92 @@ client.on('interactionCreate', async interaction => {
             await updateCellInRow(RTG_ORBAT_ID, MEMBER_ROSTER, user.tag, 'J', todayDate);
     
             // Updating Discord
-            await member.roles.set([
+            await targetMember.roles.add([
                 CONTRACTOR,
                 PROBATION,
                 FREELANCER
             ]);
-            //await member.roles.remove(GUEST);
+            await targetMember.roles.remove(GUEST);
     
             // Logging
-            console.log(commandName, interaction.user.username, `Recruiting user ${user.tag}`);
-            logCommandUsage(commandName, interaction.user.username, `Recruiting user ${user.tag}`);
+            console.log(commandName, user.tag, `Recruiting user ${user.tag}`);
+            logCommandUsage(commandName, user, `Recruiting user ${user.tag}`);
         } catch (error) {
             console.error('Command Recruit Failed:', error);
-            await interaction.reply('An error occurred while recruiting the user.');
         }
     }
 
     // Remove command
     if (commandName === 'remove') {
         try {
-            const member = await interaction.guild.members.fetch(interaction.user.id);
             const user = options.getUser('user');
+            const targetMember = await interaction.guild.members.fetch(user.id);
             await interaction.reply(`${user.tag} has been removed.`);
 
             // Google Sheets
             await RemoveUser(RTG_ORBAT_ID, MEMBER_ROSTER, user.tag);
     
             // Discord
-            await member.roles.add(GUEST);
-            await member.roles.remove(ALL_ROLES);
+            await targetMember.roles.add(GUEST);
+            await targetMember.roles.remove(ALL_ROLES);
 
             // Logging
-            console.log(commandName, interaction.user.username, `Removing user ${user.tag}`);
-            logCommandUsage(commandName, interaction.user.username, `Removing user ${user.tag}`);
+            console.log(commandName, user.tag, `Removing user ${user.tag}`);
+            logCommandUsage(commandName, user, `Removing user ${user.tag}`);
         } catch (error) {
             console.error('Command Remove Failed:', error);
-            await interaction.reply('An error occurred while removing the user.');
         }
     }
 
     // Probation op command
     if (commandName === 'probation-op') {
         try {
-            const member = await interaction.guild.members.fetch(interaction.user.id);
             const user = options.getUser('user');
             await interaction.reply(`${user.tag} has completed an op of their probation.`);
 
-            console.log(commandName, interaction.user.username, `Announcing probation completion for ${user.tag}`);
-            logCommandUsage(commandName, interaction.user.username, `Announcing probation completion for ${user.tag}`);
+            console.log(commandName, user.tag, `Announcing probation completion for ${user.tag}`);
+            logCommandUsage(commandName, user.tag, `Announcing probation completion for ${user.tag}`);
     
             const todayDate = formatDate(new Date());
             await updateCellInRow(RTG_ORBAT_ID, MEMBER_ROSTER, user.tag, 'K', todayDate);
             await updateCellInRow(RTG_ORBAT_ID, MEMBER_ROSTER, user.tag, 'L', todayDate);
             await updateCellInRow(RTG_ORBAT_ID, MEMBER_ROSTER, user.tag, 'M', todayDate);
             await updateCellInRow(RTG_ORBAT_ID, MEMBER_ROSTER, user.tag, 'N', todayDate);
+
+            // Logging
+            console.log(commandName, user.tag, `Probabtion Operation ${user.tag}`);
+            logCommandUsage(commandName, user, `Probabtion Operation ${user.tag}`);
         } catch (error) {
             console.error('Command Probation Op Failed:', error);
-            await interaction.reply('An error occurred while processing probation completion.');
         }
     }
 
     // Probation end command
     if (commandName === 'probation-end') {
         try {
-            const member = await interaction.guild.members.fetch(interaction.user.id);
             const user = options.getUser('user');
+            const targetMember = await interaction.guild.members.fetch(user.id);
             await interaction.reply(`${user.tag} has completed their probation.`);
             
-            await member.roles.remove(PROBATION); // Remove probation role
+            await targetMember.roles.remove(PROBATION); // Remove probation role
+            await updateCellInRow(RTG_ORBAT_ID, MEMBER_ROSTER, user.tag, 'B', "Active");
+            await updateCellInRow(RTG_ORBAT_ID, MEMBER_ROSTER, user.tag, 'C', "Freelancer");
             
-            console.log(commandName, interaction.user.username, `Ending probation for ${user.tag}`);
-            logCommandUsage(commandName, interaction.user.username, `Ending probation for ${user.tag}`);
-            await updateCellInRow(sheets, RTG_ORBAT_ID, MEMBER_ROSTER, user.tag, 'B', "Active");
+            console.log(commandName, user.tag, `Ending probation for ${user.tag}`);
+            logCommandUsage(commandName, user, `Ending probation for ${user.tag}`);
         } catch (error) {
             console.error('Command Probation End Failed:', error);
-            await interaction.reply('An error occurred while ending probation.');
         }
     }
 
     // Section switch command
     if (commandName === 'section-switch') {
         try {
-            const member = await interaction.guild.members.fetch(interaction.user.id);
             const user = options.getUser('user');
-            const section = options.getString('section');
-            await interaction.reply(`${user.tag} has switched to section ${sectionRole.name}.`);            
+            const section = options.getString('section');    
             const sectionRole = await interaction.guild.roles.fetch(section);
+            const targetMember = await interaction.guild.members.fetch(user.id);
+            await interaction.reply(`${user.tag} has switched to section ${sectionRole.name}.`);        
     
             // Remove old section roles
             const sectionRolesToRemove = [
@@ -426,30 +425,29 @@ client.on('interactionCreate', async interaction => {
             await updateCellInRow(RTG_ORBAT_ID, MEMBER_ROSTER, user.tag, 'C', section);
     
             // Remove all section roles and general role
-            await member.roles.remove(sectionRolesToRemove);
-            await member.roles.remove(MERCANARY);
+            await targetMember.roles.remove(sectionRolesToRemove);
+            await targetMember.roles.remove(MERCANARY);
     
             // Add the new section role
-            await member.roles.add(sectionRole);
+            await targetMember.roles.add(sectionRole);
             if (sectionRole != FREELANCER)
             {
-                await member.roles.add(MERCANARY);
+                await targetMember.roles.add(MERCANARY);
             }
             
             
-            console.log(commandName, interaction.user.username, `Switching ${user.tag} to section ${sectionRole.name}`);
-            logCommandUsage(commandName, interaction.user.username, `Switching ${user.tag} to section ${sectionRole.name}`);
+            console.log(commandName, user.tag, `Switching ${user.tag} to section ${sectionRole.name}`);
+            logCommandUsage(commandName, user, `Switching ${user.tag} to section ${sectionRole.name}`);
         } catch (error) {
             console.error('Command Section Switch Failed:', error);
-            await interaction.reply('An error occurred while switching sections.');
         }
     }
 
     // Role Switch command
     if (commandName === 'role-switch') {
         try {
-            const member = await interaction.guild.members.fetch(interaction.user.id);
             const user = options.getUser('user');
+            const targetMember = await interaction.guild.members.fetch(user.id);
             const roleName = options.getString('role');
             await interaction.reply(`${user.tag} has switched to role ${roleName}.`);
             
@@ -460,26 +458,20 @@ client.on('interactionCreate', async interaction => {
             };
             const noRole = ['Pilot', 'Crew Chief', 'Member'];
     
-            // Remove the Team Lead role if any
-            if (member.roles.cache.has(TEAM_LEAD)) {
-                await member.roles.remove(TEAM_LEAD);
-            }
-    
             await updateCellInRow(RTG_ORBAT_ID, MEMBER_ROSTER, user.tag, 'D', roleName);
     
             // Add the new role if applicable
             if (roles[roleName]) {
-                await member.roles.add(roles[roleName]);
+                await targetMember.roles.add(roles[roleName]);
             } else {
-                await member.roles.remove(TEAM_LEAD); // Remove the Team Lead role if no role
+                await targetMember.roles.remove(TEAM_LEAD);
             }
     
             
-            console.log(commandName, interaction.user.username, `Switching ${user.tag} to role ${roleName}`);
-            logCommandUsage(commandName, interaction.user.username, `Switching ${user.tag} to role ${roleName}`);
+            console.log(commandName, user.tag, `Switching ${user.tag} to role ${roleName}`);
+            logCommandUsage(commandName, user, `Switching ${user.tag} to role ${roleName}`);
         } catch (error) {
             console.error('Command Role Switch Failed:', error);
-            await interaction.reply('An error occurred while switching roles.');
         }
     }
 
@@ -493,11 +485,10 @@ client.on('interactionCreate', async interaction => {
             const seconds = Math.floor(uptime % 60);
     
             await interaction.reply(`Version ${VERSION_ID}, Bot Uptime: ${days}d ${hours}h ${minutes}m ${seconds}s`);
-            console.log(commandName, interaction.user.username, `Bot uptime requested`);
-            logCommandUsage(commandName, interaction.user.username, `Bot uptime requested`);
+            console.log(commandName, user.tag, `Bot uptime requested`);
+            logCommandUsage(commandName, user, `Bot uptime requested`);
         } catch (error) {
             console.error('Command Stats Failed:', error);
-            await interaction.reply('An error occurred while fetching stats.');
         }
     }
 });
