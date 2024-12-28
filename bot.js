@@ -161,17 +161,6 @@ async function updateCellInRow(spreadsheetId, sheetName, searchValue, column, ne
             throw new Error('Invalid column input.');
         }
 
-        // Helper function to check if newValue is a valid date
-        const isValidDate = (value) => {
-            const date = new Date(value);
-            return !isNaN(date.getTime()); // Return true if it's a valid date
-        };
-
-        // If newValue is a valid date, format it as a string (Google Sheets accepts dates in YYYY-MM-DD format)
-        if (isValidDate(newValue)) {
-            newValue = new Date(newValue).toISOString().split('T')[0]; // Format as 'YYYY-MM-DD'
-        }
-
         // Fetch sheet data
         const getSheetData = async (spreadsheetId, sheetName) => {
             const response = await sheets.spreadsheets.values.get({
@@ -263,13 +252,53 @@ async function RemoveUser(spreadsheetId, sheetName, userTag) {
     }
 }
 
-// Function to format the date as dd/mm/yyyy
-const formatDate = (date) => {
-    const day = String(date.getDate()).padStart(2, '0');  // Ensures 2-digit day
-    const month = String(date.getMonth() + 1).padStart(2, '0');  // Ensures 2-digit month
-    const year = date.getFullYear();  // Full 4-digit year
-    return `${day}/${month}/${year}`;  // Concatenate in dd/mm/yyyy format
-};
+// Function to check if a cell in a specific column contains data based on a search in column A
+async function checkCellData(spreadsheetId, sheetName, searchName, targetColumn) {
+    try {
+        // Fetch the sheet data using Google Sheets API (make sure to set up Google Sheets API and authentication)
+        const getSheetData = async (spreadsheetId, sheetName) => {
+            const response = await sheets.spreadsheets.values.get({
+                spreadsheetId,
+                range: `${sheetName}!A:Z`,
+            });
+            return response.data.values;
+        };
+
+        const columnToIndex = (column) => {
+            return column.toUpperCase().charCodeAt(0) - 65; // 'A' = 0, 'B' = 1, etc.
+        };
+
+        const sheetData = await getSheetData(spreadsheetId, sheetName);
+
+        // Find the row where the name matches in Column A
+        const row = sheetData.find(row => row[0] === searchName); // Column A is index 0
+
+        // If a matching row is found, check the value in the target column
+        if (row) {
+            // Convert column letter to index
+            const targetCell = columnToIndex(targetColumn);
+
+            // Get the value of the target cell
+            const cellValue = row[targetCell] || "";
+            console.log(cellValue);
+            
+            if (typeof cellValue === 'undefined' || cellValue === '')
+            {
+                console.log("true");
+                return true;
+            }
+            
+            console.log("false");
+            return false;
+        } else {
+            console.log('Name not found in column A.');
+            return false; // Return false if the name is not found
+        }
+    } catch (error) {
+        console.error('Error checking cell data:', error);
+        return false; // Return false in case of error
+    }
+}
 
 client.on('interactionCreate', async interaction => {
     if (!interaction.isCommand()) return;
@@ -316,12 +345,16 @@ client.on('interactionCreate', async interaction => {
             const user = options.getUser('user');
             const targetMember = await interaction.guild.members.fetch(user.id);
             await interaction.reply(`${user.tag} has been recruited.`);
+
+            // Time Today
+            const referenceDate = new Date(1899, 11, 30); // December 30, 1899 (note: months are 0-indexed)
+            const todayDate = Math.floor(((new Date()) - referenceDate) / (1000 * 60 * 60 * 24));
+            console.log(todayDate);
     
             // Updating Orbat
             await updateCellInRow(RTG_ORBAT_ID, MEMBER_ROSTER, 'Vacant', 'A', user.tag);
             await updateCellInRow(RTG_ORBAT_ID, MEMBER_ROSTER, user.tag, 'B', "Probation");
             await updateCellInRow(RTG_ORBAT_ID, MEMBER_ROSTER, user.tag, 'C', "Probation");
-            const todayDate = formatDate(new Date());
             await updateCellInRow(RTG_ORBAT_ID, MEMBER_ROSTER, user.tag, 'J', todayDate);
     
             // Updating Discord
@@ -366,17 +399,46 @@ client.on('interactionCreate', async interaction => {
     if (commandName === 'probation-op') {
         try {
             const user = options.getUser('user');
+            const targetMember = await interaction.guild.members.fetch(user.id);
             await interaction.reply(`${user.tag} has completed an op of their probation.`);
+            
+            // Time Today
+            const referenceDate = new Date(1899, 11, 30); // December 30, 1899 (note: months are 0-indexed)
+            const todayDate = Math.floor(((new Date()) - referenceDate) / (1000 * 60 * 60 * 24));
+            console.log(todayDate);
 
-            console.log(commandName, user.tag, `Announcing probation completion for ${user.tag}`);
-            logCommandUsage(commandName, user.tag, `Announcing probation completion for ${user.tag}`);
-    
-            const todayDate = formatDate(new Date());
-            await updateCellInRow(RTG_ORBAT_ID, MEMBER_ROSTER, user.tag, 'K', todayDate);
-            await updateCellInRow(RTG_ORBAT_ID, MEMBER_ROSTER, user.tag, 'L', todayDate);
-            await updateCellInRow(RTG_ORBAT_ID, MEMBER_ROSTER, user.tag, 'M', todayDate);
-            await updateCellInRow(RTG_ORBAT_ID, MEMBER_ROSTER, user.tag, 'N', todayDate);
 
+            // Setting Probation Date on Orbat
+            if (await checkCellData(RTG_ORBAT_ID, MEMBER_ROSTER, user.tag, "K") === true)
+            {
+                updateCellInRow(RTG_ORBAT_ID, MEMBER_ROSTER, user.tag, 'K', todayDate);
+            } else if (await checkCellData(RTG_ORBAT_ID, MEMBER_ROSTER, user.tag, "L") === true)
+            {
+                updateCellInRow(RTG_ORBAT_ID, MEMBER_ROSTER, user.tag, 'L', todayDate);
+            } else if (await checkCellData(RTG_ORBAT_ID, MEMBER_ROSTER, user.tag, "M") === true)
+            {
+                await updateCellInRow(RTG_ORBAT_ID, MEMBER_ROSTER, user.tag, 'M', todayDate);
+            } else if (await checkCellData(RTG_ORBAT_ID, MEMBER_ROSTER, user.tag, "N") === true)
+            {
+                await updateCellInRow(RTG_ORBAT_ID, MEMBER_ROSTER, user.tag, 'N', todayDate);
+                await targetMember.roles.remove(PROBATION); // Remove probation role
+                await updateCellInRow(RTG_ORBAT_ID, MEMBER_ROSTER, user.tag, 'B', "Active");
+                await updateCellInRow(RTG_ORBAT_ID, MEMBER_ROSTER, user.tag, 'C', "Freelancer");
+                
+                console.log(commandName, user.tag, `Ending probation for ${user.tag}`);
+                logCommandUsage(commandName, user, `Ending probation for ${user.tag}`);
+            } else
+            {
+                console.log("5");
+                await targetMember.roles.remove(PROBATION); // Remove probation role
+                await updateCellInRow(RTG_ORBAT_ID, MEMBER_ROSTER, user.tag, 'B', "Active");
+                await updateCellInRow(RTG_ORBAT_ID, MEMBER_ROSTER, user.tag, 'C', "Freelancer");
+                
+                console.log(commandName, user.tag, `Ending probation for ${user.tag}`);
+                logCommandUsage(commandName, user, `Ending probation for ${user.tag}`);
+            }
+            console.log(todayDate);
+            
             // Logging
             console.log(commandName, user.tag, `Probabtion Operation ${user.tag}`);
             logCommandUsage(commandName, user, `Probabtion Operation ${user.tag}`);
