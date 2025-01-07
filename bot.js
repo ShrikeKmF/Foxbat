@@ -28,8 +28,9 @@ const {
     CONTRACTOR,
     PROBATION,
     GUEST,
+    allowedRoles,
     ALL_ROLES
-  } = require('./roles'); // Import from roles.js
+  } = require('./roles.js'); // Import from roles.js
 
 // Add required libraries
 const { google } = require('googleapis');
@@ -456,7 +457,7 @@ client.on('interactionCreate', async interaction => {
                 FREELANCER
             ];
     
-            await updateCellInRow(RTG_ORBAT_ID, MEMBER_ROSTER, user.tag, 'C', section);
+            await updateCellInRow(RTG_ORBAT_ID, MEMBER_ROSTER, user.tag, 'C', sectionRole.name);
     
             // Remove all section roles and general role
             await targetMember.roles.remove(sectionRolesToRemove);

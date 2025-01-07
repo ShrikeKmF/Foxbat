@@ -28,8 +28,9 @@ const {
     CONTRACTOR,
     PROBATION,
     GUEST,
+    allowedRoles,
     ALL_ROLES
-  } = require('./roles'); // Import from roles.js
+  } = require('./roles.js');
 
 // Define the slash commands
 const commands = [
