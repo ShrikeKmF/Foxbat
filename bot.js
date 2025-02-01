@@ -22,7 +22,8 @@ const {
     PROBATION,
     GUEST,
     ALLOWEDROLES,
-    ALL_ROLES
+    ALL_ROLES,
+    HR
   } = require('./roles.js'); // Import from roles.js
 
 // Add required libraries
@@ -41,7 +42,7 @@ const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBit
 const TOKEN = process.env.DISCORD_TOKEN;
 const CLIENT_ID = process.env.CLIENT_ID;
 const GUILD_ID = process.env.GUILD_ID;
-const VERSION_ID = '1.0.1'; // Main.Feature.Hotfix
+const VERSION_ID = '1.1.1'; // Main.Feature.Hotfix
 
 
 // Google Sheets setup
@@ -56,6 +57,7 @@ const RTG_ORBAT_ID = '1AgXmqVKcYC2hk-P6pVmiChx7Ub3IhihnhgEv6W2DrQ8';
 // Channels
 const VOICE_CHANNEL_ID = '1322153808742318172';
 const LOG_CHANNEL_ID = '1322143539563466854';
+const HR_CHANNEL_ID = '952905680338165821';
 
 const {
     commands
@@ -83,7 +85,7 @@ client.once('ready', () => {
 // Log command usage and conditions
 async function logCommandUsage(commandName, user, conditions) {
     const logChannel = await client.channels.fetch(LOG_CHANNEL_ID); 
-    console.log(`Command: /${commandName} used by ${user} with conditions: ${conditions}`);
+    console.log(`Command: /${commandName} used by ${user.displayName} with conditions: ${conditions}`);
     await logChannel.send(`Command: /${commandName} used by ${user} with conditions: ${conditions}`);
 }
 
@@ -340,6 +342,11 @@ client.on('interactionCreate', async interaction => {
                 FREELANCER
             ]);
             await targetMember.roles.remove(GUEST);
+
+            // @HR In #human-resources channel
+            const hr_group = await interaction.guild.roles.fetch(HR);
+            const hrchannel = await client.channels.fetch(LOG_CHANNEL_ID); 
+            await hrchannel.send(`${hr_group} ${user} Has Completed Their Interview`);
     
             // Logging
             logCommandUsage(commandName, member, `Recruiting user ${user}`);
@@ -467,7 +474,11 @@ client.on('interactionCreate', async interaction => {
             {
                 await targetMember.roles.add(MERCANARY);
             }
-            
+
+            // @HR In #human-resources channel
+            const hr_group = await interaction.guild.roles.fetch(HR);
+            const hrchannel = await client.channels.fetch(LOG_CHANNEL_ID); 
+            await hrchannel.send(`${hr_group} Switching ${user} to section ${sectionRole.name}`);
             
             logCommandUsage(commandName, member, `Switching ${user} to section ${sectionRole.name}`);
         } catch (error) {
