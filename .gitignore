@@ -130,3 +130,4 @@ dist
 .pnp.*
 client_secret_1058468736542-1e6752nmkq0dtthh50fhca122s1sn89u.apps.googleusercontent.com.json
 credentials.json
+/.vscode

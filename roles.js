@@ -37,7 +37,7 @@ const ALL_ROLES = [
   ];
 
 // Define the roles that are allowed to run certain commands
-const allowedRoles = [
+const ALLOWEDROLES = [
     UNIT_COMMANDER,
     MERC_COUNCIL,
     HR_LEAD,
@@ -68,6 +68,6 @@ module.exports = {
     CONTRACTOR,
     PROBATION,
     GUEST,
-    allowedRoles,
+    ALLOWEDROLES,
     ALL_ROLES
 };

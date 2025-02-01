@@ -8,15 +8,8 @@
 // Discord: https://discord.gg/raidertacticalgroup
 /////////////////////////////////////////////////////////////////
 
+// Import Roles
 const {
-    UNIT_COMMANDER,
-    MERC_COUNCIL,
-    HR_LEAD,
-    HR,
-    INOPS,
-    INOPS_IN_TRAINING,
-    ROLEPLAYER,
-    RD,
     TEAM_LEAD,
     HITMAN,
     ARES,
@@ -28,7 +21,7 @@ const {
     CONTRACTOR,
     PROBATION,
     GUEST,
-    allowedRoles,
+    ALLOWEDROLES,
     ALL_ROLES
   } = require('./roles.js'); // Import from roles.js
 
@@ -48,7 +41,8 @@ const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBit
 const TOKEN = process.env.DISCORD_TOKEN;
 const CLIENT_ID = process.env.CLIENT_ID;
 const GUILD_ID = process.env.GUILD_ID;
-const VERSION_ID = '1.0';
+const VERSION_ID = '1.0.1'; // Main.Feature.Hotfix
+
 
 // Google Sheets setup
 const auth = new google.auth.GoogleAuth({
@@ -86,17 +80,27 @@ client.once('ready', () => {
     console.log(`Foxbot is online! Logged in as ${client.user.tag}`);
 });
 
-// Check if user has any of the allowed roles
-async function hasPermission(member) {
-    console.log('Member:', member.user.username);
-    return allowedRoles.some(role => member.roles.cache.has(role));
-}
-
 // Log command usage and conditions
 async function logCommandUsage(commandName, user, conditions) {
     const logChannel = await client.channels.fetch(LOG_CHANNEL_ID); 
-    console.log(`Command: /${commandName} used by ${user.tag} with conditions: ${conditions}`);
-    await logChannel.send(`Command: /${commandName} used by ${user.tag} with conditions: ${conditions}`);
+    console.log(`Command: /${commandName} used by ${user} with conditions: ${conditions}`);
+    await logChannel.send(`Command: /${commandName} used by ${user} with conditions: ${conditions}`);
+}
+
+// Check if user has any of the allowed roles to use the command
+async function hasPermission(member) {
+    const DoesUserHavePermission = ALLOWEDROLES.some(role => member.roles.cache.has(role));
+    
+    if (DoesUserHavePermission)
+    {
+        console.log('Passed Permissions Check:', member.user.username);
+    }
+    else
+    {
+        logCommandUsage("Permission Check Failed by:", member, 'Attempted to use restricted Command');
+    };
+    
+    return DoesUserHavePermission;
 }
 
 // Function to update the voice channel name with the number of "Contractor" members
@@ -113,7 +117,6 @@ async function updateVoiceChannel() {
 
         // Update the voice channel name
         await voiceChannel.setName(`Contractors: ${contractorCount}`);
-        //console.log(`Voice channel name updated to "Contractors: ${contractorCount}"`);
     } catch (error) {
         console.error('Error updating voice channel name:', error);
     }
@@ -273,13 +276,14 @@ async function checkCellData(spreadsheetId, sheetName, searchName, targetColumn)
     }
 }
 
+// Interaction Functionality Setup
 client.on('interactionCreate', async interaction => {
     if (!interaction.isCommand()) return;
 
     const { commandName, options } = interaction;
 
     // Get the member object for the user who invoked the command
-    const member = await interaction.guild.members.fetch(interaction.user.id);
+    const member = await interaction.guild.members.fetch(interaction.member);
     
 
     // Check if the user has the required roles for the command
@@ -295,7 +299,7 @@ client.on('interactionCreate', async interaction => {
         try {
             await updateVoiceChannel();
             await interaction.reply('Voice channel name refreshed.');
-            logCommandUsage(commandName, user.tag, 'Manual refresh of voice channel name');
+            logCommandUsage(commandName, member, 'Manual refresh of voice channel name');
         } catch (error) {
             console.error('Command Refresh Failed:', error);
         }
@@ -305,8 +309,7 @@ client.on('interactionCreate', async interaction => {
     if (commandName === 'test') {
         try {
             await interaction.reply('testing 123');
-            console.log(commandName, user.tag, 'No specific conditions');
-            logCommandUsage(commandName, user, 'No specific conditions');
+            logCommandUsage(commandName, member, 'No specific conditions');
         } catch (error) {
             console.error('Command Test Failed:', error);
         }
@@ -324,7 +327,7 @@ client.on('interactionCreate', async interaction => {
             const todayDate = Math.floor(((new Date()) - referenceDate) / (1000 * 60 * 60 * 24));
             console.log(todayDate);
     
-            // Updating Orbat
+            // Updating Order of Battle
             await updateCellInRow(RTG_ORBAT_ID, MEMBER_ROSTER, 'Vacant', 'A', user.tag);
             await updateCellInRow(RTG_ORBAT_ID, MEMBER_ROSTER, user.tag, 'B', "Probation");
             await updateCellInRow(RTG_ORBAT_ID, MEMBER_ROSTER, user.tag, 'C', "Probation");
@@ -339,8 +342,7 @@ client.on('interactionCreate', async interaction => {
             await targetMember.roles.remove(GUEST);
     
             // Logging
-            console.log(commandName, user.tag, `Recruiting user ${user.tag}`);
-            logCommandUsage(commandName, user, `Recruiting user ${user.tag}`);
+            logCommandUsage(commandName, member, `Recruiting user ${user}`);
         } catch (error) {
             console.error('Command Recruit Failed:', error);
         }
@@ -361,8 +363,7 @@ client.on('interactionCreate', async interaction => {
             await targetMember.roles.remove(ALL_ROLES);
 
             // Logging
-            console.log(commandName, user.tag, `Removing user ${user.tag}`);
-            logCommandUsage(commandName, user, `Removing user ${user.tag}`);
+            logCommandUsage(commandName, member, `Removing user ${user}`);
         } catch (error) {
             console.error('Command Remove Failed:', error);
         }
@@ -381,7 +382,8 @@ client.on('interactionCreate', async interaction => {
             console.log(todayDate);
 
 
-            // Setting Probation Date on Orbat
+            // Setting Probation Date on Order Of Battle
+            // Probably can be optimized 
             if (await checkCellData(RTG_ORBAT_ID, MEMBER_ROSTER, user.tag, "K") === true)
             {
                 updateCellInRow(RTG_ORBAT_ID, MEMBER_ROSTER, user.tag, 'K', todayDate);
@@ -398,8 +400,7 @@ client.on('interactionCreate', async interaction => {
                 await updateCellInRow(RTG_ORBAT_ID, MEMBER_ROSTER, user.tag, 'B', "Active");
                 await updateCellInRow(RTG_ORBAT_ID, MEMBER_ROSTER, user.tag, 'C', "Freelancer");
                 
-                console.log(commandName, user.tag, `Ending probation for ${user.tag}`);
-                logCommandUsage(commandName, user, `Ending probation for ${user.tag}`);
+                logCommandUsage(commandName, member, `Ending probation for ${user}`);
             } else
             {
                 console.log("5");
@@ -407,14 +408,12 @@ client.on('interactionCreate', async interaction => {
                 await updateCellInRow(RTG_ORBAT_ID, MEMBER_ROSTER, user.tag, 'B', "Active");
                 await updateCellInRow(RTG_ORBAT_ID, MEMBER_ROSTER, user.tag, 'C', "Freelancer");
                 
-                console.log(commandName, user.tag, `Ending probation for ${user.tag}`);
-                logCommandUsage(commandName, user, `Ending probation for ${user.tag}`);
+                logCommandUsage(commandName, member, `Ending probation for ${user}`);
             }
             console.log(todayDate);
             
             // Logging
-            console.log(commandName, user.tag, `Probabtion Operation ${user.tag}`);
-            logCommandUsage(commandName, user, `Probabtion Operation ${user.tag}`);
+            logCommandUsage(commandName, member, `Probabtion Operation ${user}`);
         } catch (error) {
             console.error('Command Probation Op Failed:', error);
         }
@@ -431,8 +430,7 @@ client.on('interactionCreate', async interaction => {
             await updateCellInRow(RTG_ORBAT_ID, MEMBER_ROSTER, user.tag, 'B', "Active");
             await updateCellInRow(RTG_ORBAT_ID, MEMBER_ROSTER, user.tag, 'C', "Freelancer");
             
-            console.log(commandName, user.tag, `Ending probation for ${user.tag}`);
-            logCommandUsage(commandName, user, `Ending probation for ${user.tag}`);
+            logCommandUsage(commandName, member, `Ending probation for ${user}`);
         } catch (error) {
             console.error('Command Probation End Failed:', error);
         }
@@ -471,8 +469,7 @@ client.on('interactionCreate', async interaction => {
             }
             
             
-            console.log(commandName, user.tag, `Switching ${user.tag} to section ${sectionRole.name}`);
-            logCommandUsage(commandName, user, `Switching ${user.tag} to section ${sectionRole.name}`);
+            logCommandUsage(commandName, member, `Switching ${user} to section ${sectionRole.name}`);
         } catch (error) {
             console.error('Command Section Switch Failed:', error);
         }
@@ -503,8 +500,7 @@ client.on('interactionCreate', async interaction => {
             }
     
             
-            console.log(commandName, user.tag, `Switching ${user.tag} to role ${roleName}`);
-            logCommandUsage(commandName, user, `Switching ${user.tag} to role ${roleName}`);
+            logCommandUsage(commandName, member, `Switching ${user} to role ${roleName}`);
         } catch (error) {
             console.error('Command Role Switch Failed:', error);
         }
@@ -520,8 +516,7 @@ client.on('interactionCreate', async interaction => {
             const seconds = Math.floor(uptime % 60);
     
             await interaction.reply(`Version ${VERSION_ID}, Bot Uptime: ${days}d ${hours}h ${minutes}m ${seconds}s`);
-            console.log(commandName, user.tag, `Bot uptime requested`);
-            logCommandUsage(commandName, user, `Bot uptime requested`);
+            logCommandUsage(commandName, member, `Bot uptime requested`);
         } catch (error) {
             console.error('Command Stats Failed:', error);
         }
