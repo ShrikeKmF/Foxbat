@@ -8,31 +8,18 @@
 // Discord: https://discord.gg/raidertacticalgroup
 /////////////////////////////////////////////////////////////////
 
+// Import Team Roles
 const {
-    UNIT_COMMANDER,
-    MERC_COUNCIL,
-    HR_LEAD,
-    HR,
-    INOPS,
-    INOPS_IN_TRAINING,
-    ROLEPLAYER,
-    RD,
-    TEAM_LEAD,
     HITMAN,
     ARES,
     FENRIR,
     SABRE,
     FIREBRAND,
     FREELANCER,
-    MERCANARY,
-    CONTRACTOR,
-    PROBATION,
-    GUEST,
-    allowedRoles,
-    ALL_ROLES
   } = require('./roles.js');
 
-// Define the slash commands
+// Define the slash commands for the menu in discord
+// Functionality found in bot.js
 const commands = [
     { name: 'refresh', description: 'Manually refresh the contractors count in the voice channel' },
     { name: 'test', description: 'Responds with "testing 123"' },

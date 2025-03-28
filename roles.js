@@ -11,8 +11,8 @@
 // Role IDs as variables
 const UNIT_COMMANDER    = '1033575125821440010'; // Unit Commander
 const MERC_COUNCIL      = '669012442679869459'; // Merc Council
-const HR_LEAD           = '952904175207981066'; // HR Lead
-const HR                = '1258905966842220676'; // HR
+const HR_LEAD           = '1258905966842220676'; // HR Lead
+const HR                = '952904175207981066'; // HR
 const INOPS             = '952904108501794816'; // Inops
 const INOPS_IN_TRAINING = '1015799954750570566'; // Inops in Training
 const ROLEPLAYER        = '1207151097727291443'; // Rolepalyer
@@ -37,7 +37,7 @@ const ALL_ROLES = [
   ];
 
 // Define the roles that are allowed to run certain commands
-const allowedRoles = [
+const ALLOWEDROLES = [
     UNIT_COMMANDER,
     MERC_COUNCIL,
     HR_LEAD,
@@ -68,6 +68,6 @@ module.exports = {
     CONTRACTOR,
     PROBATION,
     GUEST,
-    allowedRoles,
+    ALLOWEDROLES,
     ALL_ROLES
 };
