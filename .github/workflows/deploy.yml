@@ -58,14 +58,15 @@ jobs:
 
       - name: Restart bot with pm2
         run: |
+          PM2=/home/shrike/.nvm/versions/node/v24.13.0/bin/pm2
           # If foxbat is already running, reload it (zero-downtime).
           # If it's not running yet, start it fresh.
-          pm2 describe foxbat > /dev/null 2>&1 \
-            && pm2 reload foxbat \
-            || pm2 start bot.js --name foxbat
+          $PM2 describe foxbat > /dev/null 2>&1 \
+            && $PM2 reload foxbat \
+            || $PM2 start /home/shrike/Documents/GitHub/Foxbat/bot.js --name foxbat
 
           # Save the pm2 process list so it survives a machine reboot
-          pm2 save
+          $PM2 save
 
       - name: Show pm2 status
-        run: pm2 show foxbat
+        run: /home/shrike/.nvm/versions/node/v24.13.0/bin/pm2 show foxbat
