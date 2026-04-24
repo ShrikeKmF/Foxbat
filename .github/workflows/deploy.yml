@@ -1,21 +1,5 @@
 # ──────────────────────────────────────────────────────────────────────────────
 # Foxbat — GitHub Actions Deploy Workflow (Linux + pm2)
-#
-# Deploys to a self-hosted runner on your Linux machine.
-#
-# ONE-TIME SETUP:
-#   1. Install pm2 globally:
-#        npm install -g pm2
-#   2. Install the GitHub Actions runner on your Linux machine:
-#        GitHub repo → Settings → Actions → Runners → New self-hosted runner
-#        Follow the Linux instructions, then start it as a service:
-#        sudo ./svc.sh install && sudo ./svc.sh start
-#   3. Add all secrets in: Settings → Secrets and variables → Actions
-#
-# REQUIRED SECRETS:
-#   DISCORD_TOKEN, CLIENT_ID, GUILD_ID,
-#   VOICE_CHANNEL_ID, LOG_CHANNEL_ID, HR_CHANNEL_ID,
-#   RTG_ORBAT_ID, GOOGLE_CREDENTIALS_JSON
 # ──────────────────────────────────────────────────────────────────────────────
 
 name: Deploy Foxbat
@@ -23,8 +7,8 @@ name: Deploy Foxbat
 on:
   push:
     branches:
-      - main          # Auto-deploy on push to main
-  workflow_dispatch:  # Manual trigger from the Actions tab
+      - main
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -45,29 +29,32 @@ jobs:
         run: npm ci --omit=dev
 
       - name: Write .env file from secrets
+        env:
+          DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
+          CLIENT_ID: ${{ variables.CLIENT_ID }}
+          GUILD_ID: ${{ variables.GUILD_ID }}
+          VOICE_CHANNEL_ID: ${{ variables.VOICE_CHANNEL_ID }}
+          LOG_CHANNEL_ID: ${{ variables.LOG_CHANNEL_ID }}
+          HR_CHANNEL_ID: ${{ variables.HR_CHANNEL_ID }}
+          RTG_ORBAT_ID: ${{ variables.RTG_ORBAT_ID }}
+          GOOGLE_CREDENTIALS_JSON: ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
         run: |
-          cat > .env << 'EOF'
-          DISCORD_TOKEN=${{ secrets.DISCORD_TOKEN }}
-          CLIENT_ID=${{ variables.CLIENT_ID }}
-          GUILD_ID=${{ variables.GUILD_ID }}
-          VOICE_CHANNEL_ID=${{ variables.VOICE_CHANNEL_ID }}
-          LOG_CHANNEL_ID=${{ variables.LOG_CHANNEL_ID }}
-          HR_CHANNEL_ID=${{ variables.HR_CHANNEL_ID }}
-          RTG_ORBAT_ID=${{ variables.RTG_ORBAT_ID }}
-          GOOGLE_CREDENTIALS_JSON=${{ secrets.GOOGLE_CREDENTIALS_JSON }}
-          EOF
+          printf 'DISCORD_TOKEN=%s\n' "$DISCORD_TOKEN" > .env
+          printf 'CLIENT_ID=%s\n' "$CLIENT_ID" >> .env
+          printf 'GUILD_ID=%s\n' "$GUILD_ID" >> .env
+          printf 'VOICE_CHANNEL_ID=%s\n' "$VOICE_CHANNEL_ID" >> .env
+          printf 'LOG_CHANNEL_ID=%s\n' "$LOG_CHANNEL_ID" >> .env
+          printf 'HR_CHANNEL_ID=%s\n' "$HR_CHANNEL_ID" >> .env
+          printf 'RTG_ORBAT_ID=%s\n' "$RTG_ORBAT_ID" >> .env
+          printf 'GOOGLE_CREDENTIALS_JSON=%s\n' "$GOOGLE_CREDENTIALS_JSON" >> .env
 
       - name: Restart bot with pm2
         run: |
           PM2=/home/shrike/.nvm/versions/node/v24.13.0/bin/pm2
           BOT=/home/shrike/actions-runner/_work/Foxbat/Foxbat/bot.js
-          # If foxbat is already running, reload it (zero-downtime).
-          # If it's not running yet, start it fresh.
           $PM2 describe foxbat > /dev/null 2>&1 \
             && $PM2 reload foxbat \
             || $PM2 start $BOT --name foxbat
-
-          # Save the pm2 process list so it survives a machine reboot
           $PM2 save
 
       - name: Show pm2 status
