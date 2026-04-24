@@ -1,47 +1,58 @@
 /////////////////////////////////////////////////////////////////
 // Raider Tactical Group Discord Bot - Foxbat
 //
-// Made by Shrike
 // commands.js
-// Commands Def File for Foxbat
+// Slash Command Definitions for Foxbat
+// Registered via deploy-commands.js (not on every bot start)
 //
-// Discord: https://discord.gg/raidertacticalgroup
+// Discord: https://discord.gg/D55THJWxn4
 /////////////////////////////////////////////////////////////////
 
-// Import Team Roles
 const {
-    HITMAN,
-    ARES,
-    FENRIR,
-    SABRE,
-    FIREBRAND,
-    FREELANCER,
-  } = require('./roles.js');
+    HITMAN, ARES, FENRIR, SABRE, FIREBRAND, FREELANCER,
+} = require('./roles');
 
-// Define the slash commands for the menu in discord
-// Functionality found in bot.js
 const commands = [
-    { name: 'refresh', description: 'Manually refresh the contractors count in the voice channel' },
-    { name: 'test', description: 'Responds with "testing 123"' },
-    { name: 'recruit', description: 'Add roles for a user', options: [{ name: 'user', type: 6, description: 'User to recruit', required: true }] },
-    { name: 'remove', description: 'Remove roles for a user', options: [{ name: 'user', type: 6, description: 'User to remove', required: true }] },
-    { name: 'probation-op', description: 'Announce that a user has completed an op of their probation', options: [{ name: 'user', type: 6, description: 'User to announce', required: true }] },
-    { name: 'probation-end', description: 'Announce and remove probation role from a user', options: [{ name: 'user', type: 6, description: 'User to end probation for', required: true }] },
-    { name: 'section-switch', description: 'Switch a user’s section role', options: [
-        { name: 'user', type: 6, description: 'User to switch section for', required: true },
-        { name: 'section', type: 3, description: 'Section to assign user', required: true, choices: [
-            { name: 'Hitman', value: HITMAN }, { name: 'Ares', value: ARES }, { name: 'Fenrir', value: FENRIR },
-            { name: 'Sabre', value: SABRE }, { name: 'Firebrand', value: FIREBRAND }, { name: 'Freelancer', value: FREELANCER }
-        ]}
-    ]},
-    { name: 'role-switch', description: 'Switch the role of a user', options: [
-        { name: 'user', type: 6, description: 'User to switch role for', required: true },
-        { name: 'role', type: 3, description: 'Role to assign to the user', required: true, choices: [
-            { name: 'Team Lead', value: 'Team Lead' }, { name: '2ic', value: '2ic' }, { name: 'Pilot', value: 'Pilot' },
-            { name: 'Crew Chief', value: 'Crew Chief' }, { name: 'JTAC', value: 'JTAC' }, { name: 'Member', value: 'Member' }
-        ]}
-    ]},
-    { name: 'stats', description: 'Show the bot’s stats' }
+    {
+        name: 'refresh',
+        description: 'Manually refresh the contractors count in the voice channel',
+    },
+    {
+        name: 'test',
+        description: 'Responds with "testing 123"',
+    },
+    {
+        name: 'recruit',
+        description: 'Recruit a user — assigns roles and adds them to the ORBAT',
+        options: [
+            { name: 'user', type: 6, description: 'User to recruit', required: true },
+        ],
+    },
+    {
+        name: 'remove',
+        description: 'Remove a user — strips roles and sets them to Guest',
+        options: [
+            { name: 'user', type: 6, description: 'User to remove', required: true },
+        ],
+    },
+    {
+        name: 'probation-op',
+        description: 'Record that a user has completed a probation op',
+        options: [
+            { name: 'user', type: 6, description: 'User to record op for', required: true },
+        ],
+    },
+    {
+        name: 'probation-end',
+        description: 'Force-end a user\'s probation',
+        options: [
+            { name: 'user', type: 6, description: 'User to end probation for', required: true },
+        ],
+    },
+    {
+        name: 'stats',
+        description: 'Show the bot\'s version and uptime',
+    },
 ];
 
-module.exports = {commands};
+module.exports = { commands };

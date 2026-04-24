@@ -3,41 +3,47 @@
 //
 // Made by Shrike
 // roles.js
-// Roles Def File for Foxbat
+// Roles Definition File for Foxbat
 //
-// Discord: https://discord.gg/raidertacticalgroup
+// Discord: https://discord.gg/D55THJWxn4
 /////////////////////////////////////////////////////////////////
 
 // Role IDs as variables
 const UNIT_COMMANDER    = '1033575125821440010'; // Unit Commander
-const MERC_COUNCIL      = '669012442679869459'; // Merc Council
+const MERC_COUNCIL      = '669012442679869459';  // Merc Council
 const HR_LEAD           = '1258905966842220676'; // HR Lead
-const HR                = '952904175207981066'; // HR
-const INOPS             = '952904108501794816'; // Inops
+const HR                = '952904175207981066';  // HR
+const INOPS             = '952904108501794816';  // Inops
 const INOPS_IN_TRAINING = '1015799954750570566'; // Inops in Training
-const ROLEPLAYER        = '1207151097727291443'; // Rolepalyer
-const RD                = '952904217557876887'; // R&D
+const ROLEPLAYER        = '1207151097727291443'; // Roleplayer
+const RD                = '952904217557876887';  // R&D
 const TEAM_LEAD         = '1138339232482611270'; // Team Lead
 const HITMAN            = '1138339155110269050'; // Hitman
 const ARES              = '1169170782539235399'; // Ares
 const FENRIR            = '1310054368527253595'; // Fenrir
 const SABRE             = '1138339180854902795'; // Sabre
 const FIREBRAND         = '1138339212446400573'; // Firebrand
-const FREELANCER        = '669012337877057581'; // Freelancer
-const MERCANARY         = '669012403211599912'; // Freelancer
-const CONTRACTOR        = '987956876895457332'; // Contractor
+const FREELANCER        = '669012337877057581';  // Freelancer
+const MERCENARY         = '669012403211599912';  // Mercenary
+const CONTRACTOR        = '987956876895457332';  // Contractor
 const PROBATION         = '1052884968516362311'; // Probation
-const GUEST             = '669029865399517206'; // Guest
+const GUEST             = '669029865399517206';  // Guest
 
+// All roles that get stripped on /remove
 const ALL_ROLES = [
     MERC_COUNCIL, HR_LEAD, HR, INOPS, INOPS_IN_TRAINING,
     ROLEPLAYER, RD, TEAM_LEAD, HITMAN, ARES, FENRIR,
-    SABRE, FIREBRAND, FREELANCER, MERCANARY, CONTRACTOR,
+    SABRE, FIREBRAND, FREELANCER, MERCENARY, CONTRACTOR,
     PROBATION
-  ];
+];
 
-// Define the roles that are allowed to run certain commands
-const ALLOWEDROLES = [
+// Section roles used in /section-switch
+const SECTION_ROLES = [
+    HITMAN, ARES, FENRIR, SABRE, FIREBRAND, FREELANCER
+];
+
+// Roles permitted to run restricted commands
+const ALLOWED_ROLES = [
     UNIT_COMMANDER,
     MERC_COUNCIL,
     HR_LEAD,
@@ -45,8 +51,6 @@ const ALLOWEDROLES = [
     RD,
     TEAM_LEAD
 ];
-
-
 
 module.exports = {
     UNIT_COMMANDER,
@@ -64,10 +68,11 @@ module.exports = {
     SABRE,
     FIREBRAND,
     FREELANCER,
-    MERCANARY,
+    MERCENARY,
     CONTRACTOR,
     PROBATION,
     GUEST,
-    ALLOWEDROLES,
-    ALL_ROLES
+    ALL_ROLES,
+    SECTION_ROLES,
+    ALLOWED_ROLES,
 };
