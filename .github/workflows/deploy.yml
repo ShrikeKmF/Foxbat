@@ -31,12 +31,12 @@ jobs:
       - name: Write .env file from secrets
         env:
           DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
-          CLIENT_ID: ${{ variables.CLIENT_ID }}
-          GUILD_ID: ${{ variables.GUILD_ID }}
-          VOICE_CHANNEL_ID: ${{ variables.VOICE_CHANNEL_ID }}
-          LOG_CHANNEL_ID: ${{ variables.LOG_CHANNEL_ID }}
-          HR_CHANNEL_ID: ${{ variables.HR_CHANNEL_ID }}
-          RTG_ORBAT_ID: ${{ variables.RTG_ORBAT_ID }}
+          CLIENT_ID: ${{ vars.CLIENT_ID }}
+          GUILD_ID: ${{ vars.GUILD_ID }}
+          VOICE_CHANNEL_ID: ${{ vars.VOICE_CHANNEL_ID }}
+          LOG_CHANNEL_ID: ${{ vars.LOG_CHANNEL_ID }}
+          HR_CHANNEL_ID: ${{ vars.HR_CHANNEL_ID }}
+          RTG_ORBAT_ID: ${{ vars.RTG_ORBAT_ID }}
           GOOGLE_CREDENTIALS_JSON: ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
         run: |
           printf 'DISCORD_TOKEN=%s\n' "$DISCORD_TOKEN" > .env
