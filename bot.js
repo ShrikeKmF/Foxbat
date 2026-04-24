@@ -2,7 +2,7 @@
 // Raider Tactical Group Discord Bot - Foxbat
 //
 // Made by Shrike
-// bot.js — Entry point
+// bot.js — Entry point.
 //
 // Discord: https://discord.gg/D55THJWxn4
 /////////////////////////////////////////////////////////////////
