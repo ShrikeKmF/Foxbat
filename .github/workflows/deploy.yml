@@ -28,6 +28,7 @@ on:
 
 jobs:
   deploy:
+    environment: "Foxbat Deployment"
     runs-on: self-hosted
 
     steps:
