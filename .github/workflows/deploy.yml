@@ -48,12 +48,12 @@ jobs:
         run: |
           cat > .env << 'EOF'
           DISCORD_TOKEN=${{ secrets.DISCORD_TOKEN }}
-          CLIENT_ID=${{ secrets.CLIENT_ID }}
-          GUILD_ID=${{ secrets.GUILD_ID }}
-          VOICE_CHANNEL_ID=${{ secrets.VOICE_CHANNEL_ID }}
-          LOG_CHANNEL_ID=${{ secrets.LOG_CHANNEL_ID }}
-          HR_CHANNEL_ID=${{ secrets.HR_CHANNEL_ID }}
-          RTG_ORBAT_ID=${{ secrets.RTG_ORBAT_ID }}
+          CLIENT_ID=${{ variables.CLIENT_ID }}
+          GUILD_ID=${{ variables.GUILD_ID }}
+          VOICE_CHANNEL_ID=${{ variables.VOICE_CHANNEL_ID }}
+          LOG_CHANNEL_ID=${{ variables.LOG_CHANNEL_ID }}
+          HR_CHANNEL_ID=${{ variables.HR_CHANNEL_ID }}
+          RTG_ORBAT_ID=${{ variables.RTG_ORBAT_ID }}
           GOOGLE_CREDENTIALS_JSON=${{ secrets.GOOGLE_CREDENTIALS_JSON }}
           EOF
 
